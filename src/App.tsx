@@ -4,6 +4,7 @@ import * as React from 'react'
 import * as R from 'remeda'
 import './App.css'
 import { sanat } from './sanalista'
+import { applyRandom, capitalify, numberify } from './specializers'
 
 type ConnectMode = "hyphen" | "dot" | "underscore" | "space" | "camelCase"
 
@@ -14,11 +15,13 @@ class AppViewModel {
     .map(
       () => R.range(0, this.numberOfWords)
         .map(() => this.getWord()
-      )
+        )
     )
   @observable private words: string[][] = this.getWords()
   @computed public get passwords(): string[] {
     const connect = (words: string[][]) => words.map((theseWords) => {
+      theseWords = this.mustHaveNumber ? applyRandom(theseWords, numberify) : theseWords
+      theseWords = this.mustHaveCapital ? applyRandom(theseWords, capitalify) : theseWords
       switch (this.connectMode) {
         default:
         case "hyphen":
@@ -35,15 +38,24 @@ class AppViewModel {
     })
     return connect(this.words)
   }
-  @observable public connectMode: ConnectMode = "hyphen"
 
   public onNumberChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     this.numberOfWords = Number(event.target.options[event.target.selectedIndex].label)
     this.words = this.getWords()
   }
 
+  @observable public connectMode: ConnectMode = "hyphen"
   public onModeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     this.connectMode = event.target.options[event.target.selectedIndex].value as ConnectMode
+  }
+
+  @observable public mustHaveNumber: boolean = false
+  public onMustHaveNumberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.mustHaveNumber = event.target.checked
+  }
+  @observable public mustHaveCapital: boolean = false
+  public onMustHaveCapitalChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.mustHaveCapital = event.target.checked
   }
 
   public generateNew = () => this.words = this.getWords()
@@ -106,6 +118,31 @@ class App extends React.Component {
                     <i className="fas fa-sliders-h" />
                   </span>
                 </p>
+              </div>
+              <label className="label is-large has-text-light">Lisävalinnat</label>
+              <div className="field">
+                <input
+                  id="mustHaveNumberCheckbox" type="checkbox"
+                  className="is-checkradio is-medium has-background-color is-white"
+                  checked={appViewModel.mustHaveNumber}
+                  onChange={appViewModel.onMustHaveNumberChange} />
+                <label
+                  htmlFor="mustHaveNumberCheckbox"
+                  className="is-large has-text-light">
+                    Pitää sisältää numero
+                  </label>
+              </div>
+              <div className="field">
+                <input
+                  id="mustHaveCapitalCheckbox" type="checkbox"
+                  className="is-checkradio is-medium has-background-color is-white"
+                  checked={appViewModel.mustHaveCapital}
+                  onChange={appViewModel.onMustHaveCapitalChange} />
+                <label
+                  htmlFor="mustHaveCapitalCheckbox"
+                  className="is-large has-text-light">
+                    Pitää sisältää iso kirjain
+                  </label>
               </div>
               <div className="control is-expanded">
                 <button className="button is-success scaling-button is-fullwidth" onClick={appViewModel.generateNew}>
