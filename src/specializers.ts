@@ -1,7 +1,11 @@
-export const randomRange = (min: number, max: number) => Math.floor(min + Math.random() * (max - min))
+const secureArray = new Uint32Array(1)
+export const secureRandomRange = (min: number, max: number) => {
+  window.crypto.getRandomValues(secureArray)
+  return min + (secureArray[0] % (max - min))
+}
 
 export const capitalify = (word: string) => {
-  const idx = randomRange(0, word.length)
+  const idx = secureRandomRange(0, word.length)
   return word.substr(0, idx) + word.charAt(idx).toLocaleUpperCase() + word.substr(idx + 1, word.length)
 }
 
@@ -24,13 +28,13 @@ export const numberify = (word: string) => {
     }
   })
 
-  const idx = numberifyableIdxs[randomRange(0, numberifyableIdxs.length)]
+  const idx = numberifyableIdxs[secureRandomRange(0, numberifyableIdxs.length)]
   return word.substr(0, idx)
     + charToNum[word.charAt(idx).toLowerCase()]
     + word.substr(idx + 1, word.length)
 }
 
 export const applyRandom = <T extends {}>(arr: T[], f: (v: T) => T) => {
-  const idx = randomRange(0, arr.length)
+  const idx = secureRandomRange(0, arr.length)
   return [...arr.slice(0, idx), f(arr[idx]), ...arr.slice(idx + 1, arr.length)]
 }

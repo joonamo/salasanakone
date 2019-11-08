@@ -4,12 +4,12 @@ import * as React from 'react'
 import * as R from 'remeda'
 import './App.css'
 import { sanat } from './sanalista'
-import { applyRandom, capitalify, numberify } from './specializers'
+import { applyRandom, capitalify, numberify, secureRandomRange } from './specializers'
 
 type ConnectMode = "hyphen" | "dot" | "underscore" | "space" | "camelCase"
 
 class AppViewModel {
-  private getWord = () => sanat[Math.floor(Math.random() * (1 + sanat.length))]
+  private getWord = () => sanat[secureRandomRange(0, sanat.length)]
   @observable public numberOfWords: number = 4
   private getWords = () => R.range(0, 10)
     .map(
