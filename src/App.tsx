@@ -1,180 +1,159 @@
-import { computed, observable } from 'mobx'
-import { observer } from 'mobx-react'
-import * as React from 'react'
-import * as R from 'remeda'
-import './App.css'
-import { sanat } from './sanalista'
-import { applyRandom, capitalify, numberify, secureRandomRange } from './specializers'
+import "./globals.css"
 
-type ConnectMode = "hyphen" | "dot" | "underscore" | "space" | "camelCase"
+import * as React from "react"
 
-class AppViewModel {
-  private getWord = () => sanat[secureRandomRange(0, sanat.length)]
-  @observable public numberOfWords: number = 4
-  private getWords = () => R.range(0, 10)
-    .map(
-      () => R.range(0, this.numberOfWords)
-        .map(() => this.getWord()
-        )
+import { sanat } from "./sanalista"
+import {
+  applyRandom,
+  capitalify,
+  numberify,
+  secureRandomRange,
+} from "./specializers"
+
+const getWord = () => sanat[secureRandomRange(0, sanat.length)]
+
+export const App: React.FunctionComponent = () => {
+  const [numWords, setNumWords] = React.useState(4)
+  const [separator, setSeparator] = React.useState("hyphen")
+  const [includeNumber, setIncludeNumber] = React.useState(false)
+  const [includeCapital, setIncludeCapital] = React.useState(false)
+  const [words, setWords] = React.useState<string[][]>([])
+  const updateWords = React.useCallback(
+    () => setWords([...Array(10)].map(() => [...Array(numWords)].map(getWord))),
+    [setWords]
+  )
+  React.useEffect(updateWords, [numWords])
+
+  const [passwords, setPasswords] = React.useState<string[]>([])
+  React.useEffect(() => {
+    setPasswords(
+      words.map((theseWords) => {
+        theseWords = includeNumber
+          ? applyRandom(theseWords, numberify)
+          : theseWords
+        theseWords = includeCapital
+          ? applyRandom(theseWords, capitalify)
+          : theseWords
+        switch (separator) {
+          default:
+          case "hyphen":
+            return theseWords.join("-")
+          case "dot":
+            return theseWords.join(".")
+          case "underscore":
+            return theseWords.join("_")
+          case "space":
+            return theseWords.join(" ")
+          case "camelCase":
+            return theseWords
+              .map((word) => word.charAt(0).toUpperCase() + word.substr(1))
+              .join("")
+        }
+      })
     )
-  @observable private words: string[][] = this.getWords()
-  @computed public get passwords(): string[] {
-    const connect = (words: string[][]) => words.map((theseWords) => {
-      theseWords = this.mustHaveNumber ? applyRandom(theseWords, numberify) : theseWords
-      theseWords = this.mustHaveCapital ? applyRandom(theseWords, capitalify) : theseWords
-      switch (this.connectMode) {
-        default:
-        case "hyphen":
-          return theseWords.join('-')
-        case "dot":
-          return theseWords.join('.')
-        case "underscore":
-          return theseWords.join('_')
-        case "space":
-          return theseWords.join(' ')
-        case "camelCase":
-          return theseWords.map(word => word.charAt(0).toUpperCase() + word.substr(1)).join("")
-      }
-    })
-    return connect(this.words)
-  }
+  }, [words, separator, includeNumber, includeCapital])
 
-  public onNumberChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    this.numberOfWords = Number(event.target.options[event.target.selectedIndex].label)
-    this.words = this.getWords()
-  }
+  return (
+    <div className="container max-w-screen-xl mx-auto">
+      <div className="flex flex-col md:flex-row rounded-2xl overflow-hidden m-8 drop-shadow-xl">
+        <div className="flex-initial bg-sky-500 text-slate-50 p-4 flex-col flex gap-3">
+          <h1>Salasanakone</h1>
+          <label className="flex-col">
+            <h2>Sanojen määrä</h2>
+            <select
+              className="select"
+              value={String(numWords)}
+              onChange={(e) => setNumWords(parseInt(e.currentTarget.value))}
+            >
+              <option>2</option>
+              <option>3</option>
+              <option>4</option>
+              <option>5</option>
+              <option>6</option>
+              <option>7</option>
+              <option>8</option>
+              <option>9</option>
+              <option>10</option>
+            </select>
+          </label>
 
-  @observable public connectMode: ConnectMode = "hyphen"
-  public onModeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    this.connectMode = event.target.options[event.target.selectedIndex].value as ConnectMode
-  }
+          <label className="flex-col">
+            <h2>Erotin</h2>
+            <select
+              className="select"
+              value={separator}
+              onChange={(e) => setSeparator(e.currentTarget.value)}
+            >
+              <option value="hyphen">Viiva</option>
+              <option value="dot">Piste</option>
+              <option value="underscore">Alaviiva</option>
+              <option value="space">Välilyönti</option>
+              <option value="camelCase">Iso Kirjain</option>
+            </select>
+          </label>
 
-  @observable public mustHaveNumber: boolean = false
-  public onMustHaveNumberChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.mustHaveNumber = event.target.checked
-  }
-  @observable public mustHaveCapital: boolean = false
-  public onMustHaveCapitalChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.mustHaveCapital = event.target.checked
-  }
+          <h2>Lisävalinnat</h2>
 
-  public generateNew = () => this.words = this.getWords()
+          <label>
+            <input
+              type="checkbox"
+              className="input[type='checkbox'] h-6 w-6 rounded mr-3 border-none"
+              checked={includeNumber}
+              onChange={(e) => setIncludeNumber(e.currentTarget.checked)}
+            />
+            Pitää sisältää numero
+          </label>
+
+          <label>
+            <input
+              type="checkbox"
+              className="input[type='checkbox'] h-6 w-6 rounded mr-3 border-none"
+              checked={includeCapital}
+              onChange={(e) => setIncludeCapital(e.currentTarget.checked)}
+            />
+            Pitää sisältää iso kirjain
+          </label>
+
+          <button
+            onClick={updateWords}
+            className="bg-rose-500 hover:bg-rose-600 active:bg-rose-700 rounded-md text-xl py-3"
+          >
+            Päivitä
+          </button>
+        </div>
+        <div className="flex-1 bg-blue-100 p-4 flex flex-col gap-2 md:gap-4">
+          {passwords.map((password, i) => (
+            <PasswordField key={i} value={password} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
 }
-const appViewModel = new AppViewModel()
 
 const copyPassword = (password: string) => {
-  navigator.clipboard.writeText(password)
-    .catch(err => {
-      // This can happen if the user denies clipboard permissions:
-      console.error('Error copying password to clipboard: ', err)
-    })
+  navigator.clipboard.writeText(password).catch((err) => {
+    // This can happen if the user denies clipboard permissions:
+    console.error("Error copying password to clipboard: ", err)
+  })
 }
 
-@observer
-class App extends React.Component {
-  public render() {
-    return (
-      <section className="section">
-        <div className="container">
-          <div className="columns box is-paddingless has-background-info">
-            <div className="column is-narrow">
-              <div className="field">
-                <h1 className="title is-1 has-text-light">
-                  Salasanakone
-                </h1>
-                <label className="label is-large has-text-light">Sanojen määrä</label>
-                <p className="control has-icons-left">
-                  <span className="select is-large is-fullwidth">
-                    <select onChange={appViewModel.onNumberChange} defaultValue="4">
-                      <option>2</option>
-                      <option>3</option>
-                      <option>4</option>
-                      <option>5</option>
-                      <option>6</option>
-                      <option>7</option>
-                      <option>8</option>
-                      <option>9</option>
-                      <option>10</option>
-                    </select>
-                  </span>
-                  <span className="icon is-left">
-                    <i className="fas fa-sort-numeric-down" />
-                  </span>
-                </p>
-              </div>
-              <div className="field">
-                <label className="label is-large has-text-light">Erotin</label>
-                <p className="control has-icons-left">
-                  <span className="select is-large is-fullwidth">
-                    <select onChange={appViewModel.onModeChange} defaultValue="hyphen">
-                      <option value="hyphen">Viiva</option>
-                      <option value="dot">Piste</option>
-                      <option value="underscore">Alaviiva</option>
-                      <option value="space">Välilyönti</option>
-                      <option value="camelCase">Iso Kirjain</option>
-                    </select>
-                  </span>
-                  <span className="icon is-left">
-                    <i className="fas fa-sliders-h" />
-                  </span>
-                </p>
-              </div>
-              <label className="label is-large has-text-light">Lisävalinnat</label>
-              <div className="field">
-                <input
-                  id="mustHaveNumberCheckbox" type="checkbox"
-                  className="is-checkradio is-medium has-background-color is-white"
-                  checked={appViewModel.mustHaveNumber}
-                  onChange={appViewModel.onMustHaveNumberChange} />
-                <label
-                  htmlFor="mustHaveNumberCheckbox"
-                  className="is-large has-text-light">
-                    Pitää sisältää numero
-                  </label>
-              </div>
-              <div className="field">
-                <input
-                  id="mustHaveCapitalCheckbox" type="checkbox"
-                  className="is-checkradio is-medium has-background-color is-white"
-                  checked={appViewModel.mustHaveCapital}
-                  onChange={appViewModel.onMustHaveCapitalChange} />
-                <label
-                  htmlFor="mustHaveCapitalCheckbox"
-                  className="is-large has-text-light">
-                    Pitää sisältää iso kirjain
-                  </label>
-              </div>
-              <div className="control is-expanded">
-                <button className="button is-success scaling-button is-fullwidth" onClick={appViewModel.generateNew}>
-                  <span className="icon">
-                    <i className="fas fa-sync-alt" />
-                  </span>
-                </button>
-              </div>
-            </div>
-            <div className="column has-background-light">
-              <div>
-                {appViewModel.passwords.map((password) => {
-                  return <div key={password} className="field has-addons">
-                    <div className="control is-expanded">
-                      <input className="input scaling-control" type="text" readOnly={true} value={password} />
-                    </div>
-                    <p className="control">
-                      <a onClick={copyPassword.bind(copyPassword, password)} className="button scaling-button is-warning">
-                        <span className="icon scaling-icon">
-                          <i className="far fa-copy" />
-                        </span>
-                      </a>
-                    </p>
-                  </div>
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    )
-  }
+const PasswordField: React.FunctionComponent<{ value: string }> = ({
+  value,
+}) => {
+  return (
+    <div className="flex flew-row w-full rounded-md overflow-hidden">
+      <input
+        className="input[type='text'] flex-1 p-2 text-slate-600 bg-slate-50 text-md md:text-xl lg:text-2xl"
+        value={value}
+        onChange={() => {}}
+      />
+      <button
+        onClick={() => copyPassword(value)}
+        className="text-slate-800 bg-yellow-400 hover:bg-amber-400 active:bg-orange-400 px-1"
+      >
+        kopioi
+      </button>
+    </div>
+  )
 }
-
-export default App

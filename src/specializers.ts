@@ -6,10 +6,14 @@ export const secureRandomRange = (min: number, max: number) => {
 
 export const capitalify = (word: string) => {
   const idx = secureRandomRange(0, word.length)
-  return word.substr(0, idx) + word.charAt(idx).toLocaleUpperCase() + word.substr(idx + 1, word.length)
+  return (
+    word.substr(0, idx) +
+    word.charAt(idx).toLocaleUpperCase() +
+    word.substr(idx + 1, word.length)
+  )
 }
 
-const charToNum = {
+const charToNum: Record<string, string> = {
   a: "4",
   e: "3",
   i: "1",
@@ -17,7 +21,7 @@ const charToNum = {
   o: "0",
   s: "5",
   t: "7",
-  z: "2"
+  z: "2",
 }
 const numberifyableChars = Object.keys(charToNum)
 export const numberify = (word: string) => {
@@ -29,9 +33,11 @@ export const numberify = (word: string) => {
   })
 
   const idx = numberifyableIdxs[secureRandomRange(0, numberifyableIdxs.length)]
-  return word.substr(0, idx)
-    + charToNum[word.charAt(idx).toLowerCase()]
-    + word.substr(idx + 1, word.length)
+  return (
+    word.substr(0, idx) +
+    charToNum[word.charAt(idx).toLowerCase()] +
+    word.substr(idx + 1, word.length)
+  )
 }
 
 export const applyRandom = <T extends {}>(arr: T[], f: (v: T) => T) => {
