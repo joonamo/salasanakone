@@ -20,7 +20,7 @@ export const App: React.FunctionComponent = () => {
   const [words, setWords] = React.useState<string[][]>([])
   const updateWords = React.useCallback(
     () => setWords([...Array(10)].map(() => [...Array(numWords)].map(getWord))),
-    [setWords]
+    [setWords, numWords]
   )
   React.useEffect(updateWords, [numWords])
 
@@ -55,7 +55,7 @@ export const App: React.FunctionComponent = () => {
 
   return (
     <div className="container max-w-screen-xl mx-auto">
-      <div className="flex flex-col md:flex-row rounded-2xl overflow-hidden m-8 drop-shadow-xl">
+      <div className="flex flex-col md:flex-row rounded-2xl overflow-hidden m-2 md:m-6 lg:m-8 drop-shadow-xl">
         <div className="flex-initial bg-sky-500 text-slate-50 p-4 flex-col flex gap-3">
           <h1>Salasanakone</h1>
           <label className="flex-col">
